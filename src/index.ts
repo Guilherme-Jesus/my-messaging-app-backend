@@ -2,10 +2,11 @@ import express, { Express } from "express";
 import { Server as HTTPServer } from "http";
 import { Server as WebSocketServer } from "ws";
 import admin from "firebase-admin";
+import cors from "cors"; 
 
 const app: Express = express();
 app.use(express.json()); // Para parsear corpos de requisição JSON
-
+app.use(cors());
 // Cria o servidor HTTP a partir da aplicação Express
 const server: HTTPServer = new HTTPServer(app);
 
