@@ -1,4 +1,4 @@
-const admin = require("firebase-admin");
+const admin = require('firebase-admin')
 // const serviceAccount = require("path/to/serviceAccountKey.json");
 
 admin.initializeApp({
@@ -16,4 +16,4 @@ admin.initializeApp({
     client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
     universeDomain: process.env.FIREBASE_UNIVERSE_DOMAIN,
   }),
-});
+})
