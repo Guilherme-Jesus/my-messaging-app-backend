@@ -10,7 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node dist/index.js",
     "lint": "eslint . --ext .ts",
-    "build": "tsup src"
+    "build": "tsup src/index.ts --outDir dist --format esm"
   },
   "keywords": [],
   "author": "",
