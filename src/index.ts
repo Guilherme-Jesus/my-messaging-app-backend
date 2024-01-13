@@ -63,11 +63,12 @@ app.post('/login', async (req, res) => {
     }
     res.status(200).send(loginResponse)
   } catch (error) {
-    const loginResponse: LoginResponse = {
-      success: false,
-      message: 'Token inválido',
+    console.error('Erro na verificação do token Firebase:', error)
+    // Log detalhado
+    if (error instanceof Error) {
+      console.error('Detalhes do erro:', error.message)
     }
-    res.status(401).send(loginResponse)
+    res.status(401).send({ success: false, message: 'Token inválido' })
   }
 })
 
