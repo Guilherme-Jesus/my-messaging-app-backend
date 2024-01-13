@@ -1,8 +1,13 @@
 import express, { Express } from 'express'
 import { Server as HTTPServer } from 'http'
 import { Server as WebSocketServer } from 'ws'
-import admin from 'firebase-admin'
 import cors from 'cors'
+import serviceAccount from '../mensageria-b0e36-02471a185653.json'
+const admin = require('firebase-admin')
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+})
 
 const app: Express = express()
 app.use(express.json()) // Para parsear corpos de requisição JSON
@@ -28,6 +33,11 @@ interface LoginResponse {
   message?: string
 }
 
+interface SignupRequest {
+  email?: string
+  password?: string
+}
+
 const messages: Message[] = []
 
 // Função para enviar mensagens para todos os clientes conectados
@@ -47,6 +57,20 @@ wss.on('connection', (ws) => {
 
   // Enviar histórico de mensagens para novos clientes
   messages.forEach((msg) => ws.send(JSON.stringify(msg)))
+})
+
+app.post('/signup', async (req, res) => {
+  const user: SignupRequest = {
+    email: req.body.email,
+    password: req.body.password,
+  }
+  const userRecord = await admin.auth().createUser({
+    email: user.email,
+    password: user.password,
+    emailVerified: false,
+    disabled: false,
+  })
+  res.status(200).send(userRecord)
 })
 
 app.post('/login', async (req, res) => {
