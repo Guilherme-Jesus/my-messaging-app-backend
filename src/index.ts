@@ -22,16 +22,6 @@ interface Message {
   sender: string
   content: string
 }
-interface LoginRequest {
-  idToken: string
-}
-
-// Estrutura de dados para a resposta de login
-interface LoginResponse {
-  success: boolean
-  uid?: string
-  message?: string
-}
 
 interface SignupRequest {
   email?: string
@@ -71,29 +61,6 @@ app.post('/signup', async (req, res) => {
     disabled: false,
   })
   res.status(200).send(userRecord)
-})
-
-app.post('/login', async (req, res) => {
-  const loginRequest: LoginRequest = req.body
-
-  // Verifica se o token JWT é válido
-  try {
-    const decodedToken = await admin.auth().verifyIdToken(loginRequest.idToken)
-    const uid = decodedToken.uid
-    const loginResponse: LoginResponse = {
-      success: true,
-      uid,
-      message: 'Login realizado com sucesso',
-    }
-    res.status(200).send(loginResponse)
-  } catch (error) {
-    console.error('Erro na verificação do token Firebase:', error)
-    // Log detalhado
-    if (error instanceof Error) {
-      console.error('Detalhes do erro:', error.message)
-    }
-    res.status(401).send({ success: false, message: 'Token inválido' })
-  }
 })
 
 // Inicia o servidor para ouvir em todas as interfaces de rede
