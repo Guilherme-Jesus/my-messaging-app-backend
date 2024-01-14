@@ -41,15 +41,6 @@ function broadcastMessage(message: Message) {
   })
 }
 
-// Função para limpar todas as mensagens a cada 1 hora
-function cleanUpMessages() {
-  messages.length = 0 // Limpa todas as mensagens
-  console.log('Todas as mensagens foram removidas.')
-}
-
-// Agendar a limpeza para ocorrer a cada hora
-setInterval(cleanUpMessages, 3600000)
-
 wss.on('connection', (ws) => {
   clients.add(ws)
   console.log('Cliente conectado. Total de clientes:', clients.size)
