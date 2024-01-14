@@ -15,6 +15,10 @@ app.use(cors())
 
 const server: HTTPServer = new HTTPServer(app)
 
+interface ExtendedWebSocket extends WebSocket {
+  isAlive: boolean
+}
+
 const wss: WebSocketServer = new WebSocketServer({ server })
 
 interface Message {
@@ -29,9 +33,8 @@ interface SignupRequest {
   password?: string
 }
 
-const messages: Message[] = [] // Armazena as mensagens
+const messages: Message[] = []
 
-// Mantém um registro dos clientes conectados
 const clients = new Set<WebSocket>()
 
 function broadcastMessage(message: Message) {
@@ -42,18 +45,20 @@ function broadcastMessage(message: Message) {
   })
 }
 
-// Função para limpar todas as mensagens a cada 1 hora
 function cleanUpMessages() {
-  messages.length = 0 // Limpa todas as mensagens
+  messages.length = 0
   console.log('Todas as mensagens foram removidas.')
 }
 
-// Agendar a limpeza para ocorrer a cada  5 minutos
 setInterval(cleanUpMessages, 300000)
 
-wss.on('connection', (ws) => {
+wss.on('connection', (ws: ExtendedWebSocket) => {
+  ws.isAlive = true
   clients.add(ws)
-  console.log('Cliente conectado. Total de clientes:', clients.size)
+
+  ws.on('pong', () => {
+    ws.isAlive = true
+  })
 
   ws.on('message', (message) => {
     const msg: Message = JSON.parse(message.toString())
@@ -65,7 +70,6 @@ wss.on('connection', (ws) => {
 
   ws.on('close', () => {
     clients.delete(ws)
-    console.log('Cliente desconectado. Total de clientes:', clients.size)
   })
 
   ws.on('error', (error) => {
@@ -74,6 +78,21 @@ wss.on('connection', (ws) => {
   })
 
   messages.forEach((msg) => ws.send(JSON.stringify(msg)))
+})
+
+const interval = setInterval(() => {
+  wss.clients.forEach((ws) => {
+    const extWs = ws as ExtendedWebSocket // Faz a asserção de tipo aqui
+
+    if (!extWs.isAlive) return extWs.terminate()
+
+    extWs.isAlive = false
+    extWs.ping()
+  })
+}, 30000)
+
+wss.on('close', () => {
+  clearInterval(interval)
 })
 
 app.post('/send-message', (req, res) => {
