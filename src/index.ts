@@ -48,8 +48,8 @@ function cleanUpMessages() {
   console.log('Todas as mensagens foram removidas.')
 }
 
-// Agendar a limpeza para ocorrer a cada hora
-setInterval(cleanUpMessages, 3600000)
+// Agendar a limpeza para ocorrer a cada  5 minutos
+setInterval(cleanUpMessages, 300000)
 
 wss.on('connection', (ws) => {
   clients.add(ws)
