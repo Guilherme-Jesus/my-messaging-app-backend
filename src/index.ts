@@ -50,7 +50,7 @@ function cleanUpMessages() {
   console.log('Todas as mensagens foram removidas.')
 }
 
-setInterval(cleanUpMessages, 300000)
+setInterval(cleanUpMessages, 1800000)
 
 wss.on('connection', (ws: ExtendedWebSocket) => {
   ws.isAlive = true
