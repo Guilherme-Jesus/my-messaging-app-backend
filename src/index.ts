@@ -21,6 +21,7 @@ interface Message {
   sender: string
   content: string
   timestamp: number
+  photoURL?: string
 }
 
 interface SignupRequest {
@@ -57,6 +58,7 @@ wss.on('connection', (ws) => {
   ws.on('message', (message) => {
     const msg: Message = JSON.parse(message.toString())
     msg.timestamp = Date.now()
+    msg.photoURL = admin.auth().currentUser?.photoURL
     messages.push(msg)
     broadcastMessage(msg)
   })
