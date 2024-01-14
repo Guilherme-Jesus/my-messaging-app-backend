@@ -1,6 +1,6 @@
 import express, { Express } from 'express'
 import { Server as HTTPServer } from 'http'
-import { Server as WebSocketServer } from 'ws'
+import { Server as WebSocketServer, WebSocket } from 'ws'
 import cors from 'cors'
 import serviceAccount from '../mensageria-b0e36-02471a185653.json'
 const admin = require('firebase-admin')
@@ -10,12 +10,11 @@ admin.initializeApp({
 })
 
 const app: Express = express()
-app.use(express.json()) // Para parsear corpos de requisição JSON
+app.use(express.json())
 app.use(cors())
-// Cria o servidor HTTP a partir da aplicação Express
+
 const server: HTTPServer = new HTTPServer(app)
 
-// Inicializa o WebSocket Server
 const wss: WebSocketServer = new WebSocketServer({ server })
 
 interface Message {
@@ -30,23 +29,45 @@ interface SignupRequest {
 
 const messages: Message[] = []
 
-// Função para enviar mensagens para todos os clientes conectados
+// Mantém um registro dos clientes conectados
+const clients = new Set<WebSocket>()
+
 function broadcastMessage(message: Message) {
-  wss.clients.forEach((client) => {
-    client.send(JSON.stringify(message))
+  clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(message))
+    }
   })
 }
 
-// Configuração do WebSocket
 wss.on('connection', (ws) => {
+  clients.add(ws)
+  console.log('Cliente conectado. Total de clientes:', clients.size)
+
   ws.on('message', (message) => {
     const msg: Message = JSON.parse(message.toString())
     messages.push(msg)
     broadcastMessage(msg)
   })
 
-  // Enviar histórico de mensagens para novos clientes
+  ws.on('close', () => {
+    clients.delete(ws)
+    console.log('Cliente desconectado. Total de clientes:', clients.size)
+  })
+
+  ws.on('error', (error) => {
+    console.error('WebSocket error:', error)
+    clients.delete(ws)
+  })
+
   messages.forEach((msg) => ws.send(JSON.stringify(msg)))
+})
+app.post('/send-message', (req, res) => {
+  const message: Message = req.body
+
+  messages.push(message)
+  broadcastMessage(message)
+  res.status(200).send({ status: 'Message sent' })
 })
 
 app.post('/signup', async (req, res) => {
@@ -54,16 +75,21 @@ app.post('/signup', async (req, res) => {
     email: req.body.email,
     password: req.body.password,
   }
-  const userRecord = await admin.auth().createUser({
-    email: user.email,
-    password: user.password,
-    emailVerified: false,
-    disabled: false,
-  })
-  res.status(200).send(userRecord)
+
+  try {
+    const userRecord = await admin.auth().createUser({
+      email: user.email,
+      password: user.password,
+      emailVerified: false,
+      disabled: false,
+    })
+    res.status(200).send(userRecord)
+  } catch (error) {
+    console.error('Erro ao criar usuário:', error)
+    res.status(500).send({ error: 'Erro ao criar usuário' })
+  }
 })
 
-// Inicia o servidor para ouvir em todas as interfaces de rede
 const PORT = process.env.PORT || 3000
 server.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`)
