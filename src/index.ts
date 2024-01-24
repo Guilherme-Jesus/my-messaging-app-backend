@@ -2,12 +2,12 @@ import express, { Express } from 'express'
 import { Server as HTTPServer } from 'http'
 import { Server as WebSocketServer, WebSocket } from 'ws'
 import cors from 'cors'
-import serviceAccount from '../mensageria-b0e36-02471a185653.json'
+// import serviceAccount from '../mensageria-b0e36-02471a185653.json'
 const admin = require('firebase-admin')
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-})
+// admin.initializeApp({
+//   credential: admin.credential.cert(serviceAccount),
+// })
 
 const app: Express = express()
 app.use(express.json())
